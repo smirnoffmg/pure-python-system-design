@@ -1,4 +1,4 @@
-# 🐍 pure-python-system-design
+# 🐍 Pure Python Only
 
 System design solutions in pure Python — using `asyncio`, Python 3.12+, and just enough despair to keep things interesting.
 
