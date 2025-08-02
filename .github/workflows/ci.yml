@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Cancel in-progress jobs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+        # For monorepo, we can add more subprojects here
+        project: ["url_shortener"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ matrix.project }}/.venv
+          ${{ matrix.project }}/uv.lock
+        key: ${{ runner.os }}-uv-${{ matrix.project }}-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-${{ matrix.project }}-
+
+    - name: Install dependencies
+      run: |
+        cd ${{ matrix.project }}
+        uv sync --dev
+
+    - name: Run ruff
+      run: |
+        cd ${{ matrix.project }}
+        uv run ruff check src tests
+
+    - name: Run mypy
+      run: |
+        cd ${{ matrix.project }}
+        uv run mypy src
+
+    - name: Run tests
+      run: |
+        cd ${{ matrix.project }}
+        uv run pytest --cov=src --cov-report=xml --cov-report=term-missing
+
+    - name: Run performance benchmarks
+      run: |
+        cd ${{ matrix.project }}
+        uv run pytest --benchmark-only --benchmark-sort=mean
+
