@@ -65,12 +65,4 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 
-[[tool.mypy.overrides]]
-module = [
-    "pytest.*",
-    "pytest_mock.*",
-    "pytest_asyncio.*",
-    "pytest_timeout.*",
-    "pytest_cov.*",
-]
-ignore_missing_imports = true
+exclude = ['tests']

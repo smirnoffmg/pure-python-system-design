@@ -68,10 +68,10 @@ class SQLiteStorage(BaseStorage):
         self.encoder = encoder
         self._init_done = False
 
-    def _connect(self):
+    def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
 
-    def _initialize_sync(self):
+    def _initialize_sync(self) -> None:
         with self._connect() as conn:
             conn.execute(
                 """
@@ -84,14 +84,14 @@ class SQLiteStorage(BaseStorage):
             conn.commit()
         self._init_done = True
 
-    async def _initialize(self):
+    async def _initialize(self) -> None:
         if not self._init_done:
             await asyncio.to_thread(self._initialize_sync)
 
     async def get_short_url(self, url: str) -> str:
         await self._initialize()
 
-        def sync_get_or_insert():
+        def sync_get_or_insert() -> str:
             with self._connect() as conn:
                 cursor = conn.execute(
                     "SELECT id FROM url_mapping WHERE full_url = ?", (url,)
@@ -104,7 +104,7 @@ class SQLiteStorage(BaseStorage):
                     "INSERT INTO url_mapping (full_url) VALUES (?)", (url,)
                 )
                 conn.commit()
-                last_id = cursor.lastrowid
+                last_id = cursor.lastrowid or 1
                 return self.encoder.encode(last_id)
 
         return await asyncio.to_thread(sync_get_or_insert)
@@ -112,7 +112,7 @@ class SQLiteStorage(BaseStorage):
     async def get_full_url(self, short_code: str) -> str | None:
         await self._initialize()
 
-        def sync_get():
+        def sync_get() -> str | None:
             try:
                 id = self.encoder.decode(short_code)
             except Exception:

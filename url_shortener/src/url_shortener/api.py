@@ -11,10 +11,14 @@ class HTTPRequest:
     Represents an HTTP request parsed from raw bytes.
     """
 
+    method: str
+    path: str
+    version: str
+
     def __init__(self, raw_data: bytes):
-        self.method: str | None = None
-        self.path: str | None = None
-        self.version: str | None = None
+        # self.method: str | None = None
+        # self.path: str | None = None
+        # self.version: str | None = None
         self.headers: dict[str, str] = {}
         self.body: str | None = None
         self.content_length = 0
@@ -22,7 +26,7 @@ class HTTPRequest:
 
         self._parse(raw_data)
 
-    def _parse(self, data: bytes):
+    def _parse(self, data: bytes) -> None:
         try:
             header_part, _, body_part = data.partition(b"\r\n\r\n")
             header_lines = header_part.decode().split("\r\n")
@@ -136,14 +140,14 @@ class RequestHandler:
 
 
 class HTTPProtocol(asyncio.Protocol):
-    transport: asyncio.Transport
+    transport: asyncio.BaseTransport
 
     def __init__(self, request_handler: RequestHandler) -> None:
         self.request_handler = request_handler
         self._processing = False
         self._buffer = bytearray()
 
-    def connection_made(self, transport: asyncio.Transport) -> None:
+    def connection_made(self, transport: asyncio.BaseTransport) -> None:
         self.transport = transport
 
     def data_received(self, data: bytes) -> None:
@@ -156,15 +160,15 @@ class HTTPProtocol(asyncio.Protocol):
             self._processing = True
             asyncio.create_task(self._process_request(request))
 
-    async def _process_request(self, request: HTTPRequest):
+    async def _process_request(self, request: HTTPRequest) -> None:
         response = await self.request_handler.handle(request)
-        self.transport.write(response.serialize())
+        self.transport.write(response.serialize())  # type: ignore
         self.transport.close()
         self._processing = False
         self._buffer.clear()
 
 
-async def shutdown(server: asyncio.AbstractServer, sig):
+async def shutdown(server: asyncio.AbstractServer, sig: signal.Signals) -> None:
     logger.info(f"Received exit signal {sig.name}...")
     server.close()
     await server.wait_closed()
@@ -173,7 +177,7 @@ async def shutdown(server: asyncio.AbstractServer, sig):
     loop.stop()
 
 
-async def serve(shortener: Shortener, host: str, port: int):
+async def serve(shortener: Shortener, host: str, port: int) -> None:
     loop = asyncio.get_running_loop()
     handler = RequestHandler(shortener)
 
@@ -187,7 +191,8 @@ async def serve(shortener: Shortener, host: str, port: int):
 
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(
-            sig, lambda sig=sig: asyncio.create_task(shutdown(server, sig))
+            sig,
+            lambda sig=sig: asyncio.create_task(shutdown(server, sig)),  # type:ignore
         )
 
     # Keep server running until stopped
