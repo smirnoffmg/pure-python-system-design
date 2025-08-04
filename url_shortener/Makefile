@@ -7,3 +7,7 @@ run:
 ci:
 	uv run ruff check --fix
 	uv run mypy .
+
+benchmark:
+	uv run pytest tests/test_benchmarks.py --benchmark-only --benchmark-skip
+

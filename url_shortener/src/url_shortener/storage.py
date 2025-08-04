@@ -2,17 +2,29 @@ import asyncio
 import sqlite3
 from abc import ABC, abstractmethod
 
+from .database import DatabaseManager
 from .encoder import BaseEncoder
+from .exceptions import StorageError
 
 
-class BaseStorage(ABC):
-    encoder: BaseEncoder
+class ReadStorage(ABC):
+    """Interface for read-only storage operations."""
+
+    @abstractmethod
+    async def get_full_url(self, short_url: str) -> str | None: ...
+
+
+class WriteStorage(ABC):
+    """Interface for write-only storage operations."""
 
     @abstractmethod
     async def get_short_url(self, full_url: str) -> str: ...
 
-    @abstractmethod
-    async def get_full_url(self, short_url: str) -> str | None: ...
+
+class BaseStorage(ReadStorage, WriteStorage):
+    """Combined interface for read-write storage operations."""
+
+    encoder: BaseEncoder
 
 
 class InMemoryStorage(BaseStorage):
@@ -64,27 +76,21 @@ class InMemoryStorage(BaseStorage):
 
 class SQLiteStorage(BaseStorage):
     def __init__(self, encoder: BaseEncoder, db_path: str = ":memory:"):
-        self.db_path = db_path
+        self.db_manager = DatabaseManager(db_path)
         self.encoder = encoder
         self._init_done = False
 
     def _connect(self) -> sqlite3.Connection:
-        return sqlite3.connect(self.db_path)
+        """Get a database connection (for testing compatibility)."""
+        return self.db_manager._connect()
 
     def _initialize_sync(self) -> None:
-        with self._connect() as conn:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS url_mapping (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    full_url TEXT UNIQUE NOT NULL
-                )
-                """
-            )
-            conn.commit()
+        """Initialize the database synchronously."""
+        self.db_manager.initialize()
         self._init_done = True
 
     async def _initialize(self) -> None:
+        """Initialize the database asynchronously."""
         if not self._init_done:
             await asyncio.to_thread(self._initialize_sync)
 
@@ -92,20 +98,23 @@ class SQLiteStorage(BaseStorage):
         await self._initialize()
 
         def sync_get_or_insert() -> str:
-            with self._connect() as conn:
-                cursor = conn.execute(
-                    "SELECT id FROM url_mapping WHERE full_url = ?", (url,)
-                )
-                row = cursor.fetchone()
-                if row:
-                    return self.encoder.encode(row[0])
+            try:
+                with self.db_manager.get_connection() as conn:
+                    cursor = conn.execute(
+                        "SELECT id FROM url_mapping WHERE full_url = ?", (url,)
+                    )
+                    row = cursor.fetchone()
+                    if row:
+                        return self.encoder.encode(row[0])
 
-                cursor = conn.execute(
-                    "INSERT INTO url_mapping (full_url) VALUES (?)", (url,)
-                )
-                conn.commit()
-                last_id = cursor.lastrowid or 1
-                return self.encoder.encode(last_id)
+                    cursor = conn.execute(
+                        "INSERT INTO url_mapping (full_url) VALUES (?)", (url,)
+                    )
+                    conn.commit()
+                    last_id = cursor.lastrowid or 1
+                    return self.encoder.encode(last_id)
+            except Exception as e:
+                raise StorageError(f"Failed to get or insert URL: {e}") from e
 
         return await asyncio.to_thread(sync_get_or_insert)
 
@@ -115,13 +124,21 @@ class SQLiteStorage(BaseStorage):
         def sync_get() -> str | None:
             try:
                 id = self.encoder.decode(short_code)
-            except Exception:
+                # Check if the decoded ID is reasonable (not too large for SQLite)
+                if id > 9223372036854775807:  # SQLite INTEGER max value
+                    return None
+            except (Exception, OverflowError):
+                # Return None for invalid codes instead of raising
                 return None
-            with self._connect() as conn:
-                cursor = conn.execute(
-                    "SELECT full_url FROM url_mapping WHERE id = ?", (id,)
-                )
-                row = cursor.fetchone()
-                return row[0] if row else None
+
+            try:
+                with self.db_manager.get_connection() as conn:
+                    cursor = conn.execute(
+                        "SELECT full_url FROM url_mapping WHERE id = ?", (id,)
+                    )
+                    row = cursor.fetchone()
+                    return row[0] if row else None
+            except Exception as e:
+                raise StorageError(f"Failed to get full URL: {e}") from e
 
         return await asyncio.to_thread(sync_get)
