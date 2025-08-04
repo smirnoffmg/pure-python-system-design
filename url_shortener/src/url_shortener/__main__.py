@@ -1,10 +1,11 @@
 import asyncio
 
-from .api import serve
-from .encoder import Base62Encoder
-from .logger import logger
-from .service import Shortener
-from .storage import InMemoryStorage
+from .application import Shortener
+from .domain import Base62Encoder
+from .infrastructure import InMemoryStorage, get_logger
+from .presentation import serve
+
+logger = get_logger(__name__)
 
 if __name__ == "__main__":
     encoder = Base62Encoder()

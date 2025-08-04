@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 
-from .storage import BaseStorage
+from ..infrastructure import BaseStorage
 
 
 class BaseShortener(ABC):
     storage: BaseStorage
 
     @abstractmethod
-    async def get_short_url(self, url: str) -> str: ...
+    async def create_short_code(self, url: str) -> str: ...
 
     @abstractmethod
     async def get_full_url(self, url: str) -> str | None: ...
@@ -24,21 +24,21 @@ class Shortener(BaseShortener):
         """
         self.storage = storage
 
-    async def get_short_url(self, url: str) -> str:
+    async def create_short_code(self, url: str) -> str:
         """
-        Generate a short URL from the given full URL.
+        Generate a short code from the given full URL.
 
         This method interacts with the storage backend to either retrieve an existing
-        short URL for the provided full URL or generate a new one if it does not exist.
+        short code for the provided full URL or generate a new one if it does not exist.
 
         Args:
             url (str): The full URL to be shortened.
 
         Returns:
-            str: The generated short URL.
+            str: The generated short code.
         """
         # logging, caching, stats, etc...
-        return await self.storage.get_short_url(url)
+        return await self.storage.create_short_code(url)
 
     async def get_full_url(self, url: str) -> str | None:
         """

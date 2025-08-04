@@ -1,6 +1,6 @@
 import pytest
 
-from url_shortener.encoder import Base62Encoder
+from url_shortener.domain import Base62Encoder
 
 
 def test_encode_negative_number(encoder: Base62Encoder):

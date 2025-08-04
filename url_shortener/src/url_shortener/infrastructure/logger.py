@@ -17,7 +17,7 @@ def get_logger(name: str) -> logging.Logger:
     logger.setLevel(logging.INFO)  # Set the default log level to INFO
 
     # Check if the logger already has handlers to avoid duplicate logs
-    if not logger.hasHandlers():
+    if len(logger.handlers) == 0:
         # Create a console handler
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)

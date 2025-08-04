@@ -12,6 +12,7 @@ dev = [
     "mypy>=1.17.1",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
+    "pytest-benchmark>=5.1.0",
     "pytest-cov>=6.2.1",
     "pytest-timeout>=2.4.0",
     "pytest-xdist>=3.8.0",
@@ -31,7 +32,7 @@ omit = ["*/tests/*"]
 
 [tool.ruff]
 target-version = "py312"
-line-length = 88
+line-length = 120
 
 [tool.ruff.lint]
 select = [
@@ -65,12 +66,4 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 
-[[tool.mypy.overrides]]
-module = [
-    "pytest.*",
-    "pytest_mock.*",
-    "pytest_asyncio.*",
-    "pytest_timeout.*",
-    "pytest_cov.*",
-]
-ignore_missing_imports = true
+exclude = ['tests']
