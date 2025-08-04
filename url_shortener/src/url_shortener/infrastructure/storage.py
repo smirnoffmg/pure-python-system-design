@@ -2,29 +2,20 @@ import asyncio
 import sqlite3
 from abc import ABC, abstractmethod
 
+from ..domain import BaseEncoder, StorageError
 from .database import DatabaseManager
-from .encoder import BaseEncoder
-from .exceptions import StorageError
 
 
-class ReadStorage(ABC):
-    """Interface for read-only storage operations."""
-
-    @abstractmethod
-    async def get_full_url(self, short_url: str) -> str | None: ...
-
-
-class WriteStorage(ABC):
-    """Interface for write-only storage operations."""
-
-    @abstractmethod
-    async def get_short_url(self, full_url: str) -> str: ...
-
-
-class BaseStorage(ReadStorage, WriteStorage):
-    """Combined interface for read-write storage operations."""
+class BaseStorage(ABC):
+    """Interface for URL storage operations."""
 
     encoder: BaseEncoder
+
+    @abstractmethod
+    async def get_full_url(self, short_code: str) -> str | None: ...
+
+    @abstractmethod
+    async def create_short_code(self, full_url: str) -> str: ...
 
 
 class InMemoryStorage(BaseStorage):
@@ -37,41 +28,41 @@ class InMemoryStorage(BaseStorage):
         self.lock = asyncio.Lock()
         self._length = 0
 
-    async def get_short_url(self, full_url: str) -> str:
+    async def create_short_code(self, full_url: str) -> str:
         """
-        Get the short URL for a given full URL.
+        Create a short code for a given full URL.
 
         Args:
             full_url (str): The full URL to be shortened.
 
         Returns:
-            str: The short URL.
+            str: The short code.
         """
         async with self.lock:
             if full_url in self.full_x_short:
                 return self.full_x_short[full_url]
 
             new_length = self._length + 1
-            short_url = self.encoder.encode(new_length)
-            self.full_x_short[full_url] = short_url
-            self.short_x_full[short_url] = full_url
+            short_code = self.encoder.encode(new_length)
+            self.full_x_short[full_url] = short_code
+            self.short_x_full[short_code] = full_url
 
             self._length = new_length  # Update length after successful encoding
 
-            return short_url
+            return short_code
 
-    async def get_full_url(self, short_url: str) -> str | None:
+    async def get_full_url(self, short_code: str) -> str | None:
         """
-        Get the full URL for a given short URL.
+        Get the full URL for a given short code.
 
         Args:
-            short_url (str): The short URL to be expanded.
+            short_code (str): The short code to be expanded.
 
         Returns:
             str | None: The full URL if found, otherwise None.
         """
         async with self.lock:
-            return self.short_x_full.get(short_url, None)
+            return self.short_x_full.get(short_code, None)
 
 
 class SQLiteStorage(BaseStorage):
@@ -94,7 +85,7 @@ class SQLiteStorage(BaseStorage):
         if not self._init_done:
             await asyncio.to_thread(self._initialize_sync)
 
-    async def get_short_url(self, url: str) -> str:
+    async def create_short_code(self, url: str) -> str:
         await self._initialize()
 
         def sync_get_or_insert() -> str:

@@ -6,7 +6,9 @@ import logging
 import logging.handlers
 from unittest.mock import patch
 
-from url_shortener.logger import get_logger, logger
+from url_shortener.infrastructure import get_logger
+
+logger = get_logger(__name__)
 
 
 class TestLogger:
@@ -75,7 +77,7 @@ class TestLogger:
     def test_logger_module_logger(self) -> None:
         """Test that the module logger is properly configured."""
         assert isinstance(logger, logging.Logger)
-        assert logger.name == "url_shortener.logger"
+        assert logger.name == "tests.test_logger"
 
     def test_logger_can_log_messages(self) -> None:
         """Test that the logger can actually log messages."""

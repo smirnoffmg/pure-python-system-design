@@ -1,5 +1,5 @@
 """
-Utility functions for URL shortener service.
+URL utility functions for the infrastructure layer.
 """
 
 import re

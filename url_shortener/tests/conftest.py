@@ -1,8 +1,8 @@
 import pytest
 
-from url_shortener.encoder import Base62Encoder
-from url_shortener.service import Shortener
-from url_shortener.storage import InMemoryStorage
+from url_shortener.application import Shortener
+from url_shortener.domain import Base62Encoder
+from url_shortener.infrastructure import InMemoryStorage
 
 
 @pytest.fixture()

@@ -6,17 +6,23 @@ import asyncio
 
 import pytest
 
-from url_shortener.api import (
-    HTTPProtocol,
+from url_shortener.application import Shortener
+from url_shortener.domain import Base62Encoder
+from url_shortener.infrastructure import (
+    HTTPRequest,
     HTTPRequestParser,
+    HTTPResponse,
     HTTPResponseSerializer,
-    RequestHandler,
+    InMemoryStorage,
 )
-from url_shortener.encoder import Base62Encoder
-from url_shortener.handlers import ResponseBuilder
-from url_shortener.service import Shortener
-from url_shortener.storage import InMemoryStorage
-from url_shortener.types import HTTPRequest, HTTPResponse
+from url_shortener.presentation import (
+    HTTPProtocol,
+    RequestHandler,
+    error_response,
+    json_response,
+    not_found,
+    redirect_response,
+)
 
 
 class TestHTTPRequest:
@@ -135,9 +141,7 @@ class TestResponseBuilder:
 
     def test_json_response(self) -> None:
         """Test creating a JSON response."""
-        response = ResponseBuilder.json_response(
-            201, "Created", {"short_url": "abc123"}
-        )
+        response = json_response(201, "Created", {"short_url": "abc123"})
 
         assert response.status_code == 201
         assert response.status_message == "Created"
@@ -145,7 +149,7 @@ class TestResponseBuilder:
 
     def test_error_response(self) -> None:
         """Test creating an error response."""
-        response = ResponseBuilder.error_response(400, "Bad Request", "Invalid URL")
+        response = error_response(400, "Bad Request", "Invalid URL")
 
         assert response.status_code == 400
         assert response.status_message == "Bad Request"
@@ -153,7 +157,7 @@ class TestResponseBuilder:
 
     def test_redirect_response(self) -> None:
         """Test creating a redirect response."""
-        response = ResponseBuilder.redirect_response("http://example.com")
+        response = redirect_response("http://example.com")
 
         assert response.status_code == 302
         assert response.status_message == "Found"
@@ -161,7 +165,7 @@ class TestResponseBuilder:
 
     def test_not_found_response(self) -> None:
         """Test creating a not found response."""
-        response = ResponseBuilder.not_found()
+        response = not_found()
 
         assert response.status_code == 404
         assert response.status_message == "Not Found"
@@ -192,7 +196,7 @@ class TestRequestHandler:
         response = await handler.handle(request)
 
         assert response.status_code == 201
-        assert "short_url" in response.body
+        assert "short_code" in response.body
 
     @pytest.mark.asyncio
     async def test_handle_redirect_request(self, handler: RequestHandler) -> None:
@@ -206,7 +210,7 @@ class TestRequestHandler:
             '{"url": "http://example.com"}',
         )
         shorten_response = await handler.handle(shorten_request)
-        short_url = shorten_response.body["short_url"]
+        short_url = shorten_response.body["short_code"]
         short_code = short_url.split("/")[-1]
 
         # Then test redirect

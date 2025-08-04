@@ -1,5 +1,5 @@
 """
-Common types and data structures for the URL shortener service.
+HTTP-related types and data structures for the infrastructure layer.
 """
 
 from dataclasses import dataclass

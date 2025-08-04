@@ -4,40 +4,28 @@ Tests for the handlers module.
 
 import pytest
 
-from url_shortener.encoder import Base62Encoder
-from url_shortener.handlers import (
+from url_shortener.application import Shortener
+from url_shortener.domain import Base62Encoder
+from url_shortener.infrastructure import HTTPRequest, InMemoryStorage
+from url_shortener.presentation import (
     HandlerRegistry,
-    MethodHandler,
-    RedirectHandler,
-    ShortenHandler,
+    handle_redirect,
+    handle_shorten,
 )
-from url_shortener.service import Shortener
-from url_shortener.storage import InMemoryStorage
-from url_shortener.types import HTTPRequest
-
-
-class TestMethodHandler:
-    """Test MethodHandler abstract class."""
-
-    def test_method_handler_is_abstract(self) -> None:
-        """Test that MethodHandler is abstract and cannot be instantiated."""
-        with pytest.raises(TypeError):
-            MethodHandler(None)
 
 
 class TestShortenHandler:
-    """Test ShortenHandler class."""
+    """Test handle_shorten function."""
 
     @pytest.fixture
-    def handler(self) -> ShortenHandler:
-        """Create a ShortenHandler instance."""
+    def shortener(self) -> Shortener:
+        """Create a Shortener instance."""
         encoder = Base62Encoder()
         storage = InMemoryStorage(encoder)
-        shortener = Shortener(storage)
-        return ShortenHandler(shortener)
+        return Shortener(storage)
 
     @pytest.mark.asyncio
-    async def test_handle_valid_request(self, handler: ShortenHandler) -> None:
+    async def test_handle_valid_request(self, shortener: Shortener) -> None:
         """Test handling a valid shorten request."""
         request = HTTPRequest(
             "POST",
@@ -47,23 +35,23 @@ class TestShortenHandler:
             '{"url": "http://example.com"}',
         )
 
-        response = await handler.handle(request)
+        response = await handle_shorten(request, shortener)
 
         assert response.status_code == 201
-        assert "short_url" in response.body
+        assert "short_code" in response.body
 
     @pytest.mark.asyncio
-    async def test_handle_empty_body(self, handler: ShortenHandler) -> None:
+    async def test_handle_empty_body(self, shortener: Shortener) -> None:
         """Test handling a request with empty body."""
         request = HTTPRequest("POST", "/shorten", "HTTP/1.1", {}, None)
 
-        response = await handler.handle(request)
+        response = await handle_shorten(request, shortener)
 
         assert response.status_code == 400
         assert response.body["error"] == "Empty request body"
 
     @pytest.mark.asyncio
-    async def test_handle_missing_url(self, handler: ShortenHandler) -> None:
+    async def test_handle_missing_url(self, shortener: Shortener) -> None:
         """Test handling a request with missing URL."""
         request = HTTPRequest(
             "POST",
@@ -73,13 +61,13 @@ class TestShortenHandler:
             '{"other_field": "value"}',
         )
 
-        response = await handler.handle(request)
+        response = await handle_shorten(request, shortener)
 
         assert response.status_code == 400
         assert response.body["error"] == "URL parameter is required"
 
     @pytest.mark.asyncio
-    async def test_handle_invalid_json(self, handler: ShortenHandler) -> None:
+    async def test_handle_invalid_json(self, shortener: Shortener) -> None:
         """Test handling a request with invalid JSON."""
         request = HTTPRequest(
             "POST",
@@ -89,13 +77,13 @@ class TestShortenHandler:
             '{"url": "http://example.com"',  # Missing closing brace
         )
 
-        response = await handler.handle(request)
+        response = await handle_shorten(request, shortener)
 
         assert response.status_code == 400
         assert response.body["error"] == "Invalid JSON format"
 
     @pytest.mark.asyncio
-    async def test_handle_invalid_url(self, handler: ShortenHandler) -> None:
+    async def test_handle_invalid_url(self, shortener: Shortener) -> None:
         """Test handling a request with invalid URL."""
         request = HTTPRequest(
             "POST",
@@ -105,13 +93,13 @@ class TestShortenHandler:
             '{"url": "not-a-valid-url"}',
         )
 
-        response = await handler.handle(request)
+        response = await handle_shorten(request, shortener)
 
         assert response.status_code == 400
         assert response.body["error"] == "Invalid URL format"
 
     @pytest.mark.asyncio
-    async def test_handle_url_without_protocol(self, handler: ShortenHandler) -> None:
+    async def test_handle_url_without_protocol(self, shortener: Shortener) -> None:
         """Test handling a URL without protocol (should be normalized)."""
         request = HTTPRequest(
             "POST",
@@ -121,7 +109,7 @@ class TestShortenHandler:
             '{"url": "example.com"}',
         )
 
-        response = await handler.handle(request)
+        response = await handle_shorten(request, shortener)
 
         assert (
             response.status_code == 400
@@ -130,50 +118,44 @@ class TestShortenHandler:
 
 
 class TestRedirectHandler:
-    """Test RedirectHandler class."""
+    """Test handle_redirect function."""
 
     @pytest.fixture
-    def handler(self) -> RedirectHandler:
-        """Create a RedirectHandler instance."""
+    def shortener(self) -> Shortener:
+        """Create a Shortener instance."""
         encoder = Base62Encoder()
         storage = InMemoryStorage(encoder)
-        shortener = Shortener(storage)
-        return RedirectHandler(shortener)
+        return Shortener(storage)
 
     @pytest.mark.asyncio
-    async def test_handle_existing_short_code(self, handler: RedirectHandler) -> None:
+    async def test_handle_existing_short_code(self, shortener: Shortener) -> None:
         """Test handling a request for an existing short code."""
-        # Use the same shortener that the handler uses
-        shortener = handler.shortener
-
         # Create a short URL
-        short_url = await shortener.get_short_url("http://example.com")
+        short_url = await shortener.create_short_code("http://example.com")
         short_code = short_url.split("/")[-1]
 
         # Test redirect
         request = HTTPRequest("GET", f"/{short_code}", "HTTP/1.1", {})
-        response = await handler.handle(request)
+        response = await handle_redirect(request, shortener)
 
         assert response.status_code == 302
         assert response.headers["Location"] == "http://example.com"
 
     @pytest.mark.asyncio
-    async def test_handle_nonexistent_short_code(
-        self, handler: RedirectHandler
-    ) -> None:
+    async def test_handle_nonexistent_short_code(self, shortener: Shortener) -> None:
         """Test handling a request for a nonexistent short code."""
         request = HTTPRequest("GET", "/nonexistent", "HTTP/1.1", {})
 
-        response = await handler.handle(request)
+        response = await handle_redirect(request, shortener)
 
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_handle_invalid_short_code(self, handler: RedirectHandler) -> None:
+    async def test_handle_invalid_short_code(self, shortener: Shortener) -> None:
         """Test handling a request with invalid short code format."""
         request = HTTPRequest("GET", "/invalid-code!", "HTTP/1.1", {})
 
-        response = await handler.handle(request)
+        response = await handle_redirect(request, shortener)
 
         assert response.status_code == 404
 
@@ -194,14 +176,14 @@ class TestHandlerRegistry:
         handler = registry.get_handler("POST", "/shorten")
 
         assert handler is not None
-        assert isinstance(handler, ShortenHandler)
+        assert callable(handler)
 
     def test_get_handler_pattern_match(self, registry: HandlerRegistry) -> None:
         """Test getting a handler for a pattern match."""
         handler = registry.get_handler("GET", "/abc123")
 
         assert handler is not None
-        assert isinstance(handler, RedirectHandler)
+        assert callable(handler)
 
     def test_get_handler_no_match(self, registry: HandlerRegistry) -> None:
         """Test getting a handler when no match is found."""

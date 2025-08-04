@@ -1,12 +1,17 @@
 import asyncio
 import signal
 
-from .handlers import HandlerRegistry
-from .http_parser import HTTPRequestParser
-from .http_serializer import HTTPResponseSerializer
-from .logger import logger
-from .service import Shortener
-from .types import HTTPRequest, HTTPResponse
+from ..application import Shortener
+from ..infrastructure import (
+    HTTPRequest,
+    HTTPRequestParser,
+    HTTPResponse,
+    HTTPResponseSerializer,
+    get_logger,
+)
+from .handlers import HandlerRegistry, not_found
+
+logger = get_logger(__name__)
 
 
 class RequestHandler:
@@ -21,11 +26,8 @@ class RequestHandler:
     async def handle(self, request: HTTPRequest) -> HTTPResponse:
         handler = self.handler_registry.get_handler(request.method, request.path)
         if handler:
-            return await handler.handle(request)
-        else:
-            from .handlers import ResponseBuilder
-
-            return ResponseBuilder.not_found()
+            return await handler(request)
+        return not_found()
 
 
 class HTTPProtocol(asyncio.Protocol):

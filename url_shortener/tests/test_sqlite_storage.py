@@ -8,8 +8,8 @@ import tempfile
 
 import pytest
 
-from url_shortener.encoder import Base62Encoder
-from url_shortener.storage import SQLiteStorage
+from url_shortener.domain import Base62Encoder
+from url_shortener.infrastructure import SQLiteStorage
 
 
 class TestSQLiteStorage:
@@ -35,27 +35,27 @@ class TestSQLiteStorage:
         return storage
 
     @pytest.mark.asyncio
-    async def test_get_short_url_new_url(self, storage: SQLiteStorage) -> None:
-        """Test getting a short URL for a new URL."""
-        short_url = await storage.get_short_url("http://example.com")
+    async def test_create_short_code_new_url(self, storage: SQLiteStorage) -> None:
+        """Test creating a short code for a new URL."""
+        short_url = await storage.create_short_code("http://example.com")
 
         assert short_url is not None
         assert len(short_url) > 0
 
     @pytest.mark.asyncio
-    async def test_get_short_url_existing_url(self, storage: SQLiteStorage) -> None:
-        """Test getting a short URL for an existing URL (should return same)."""
+    async def test_create_short_code_existing_url(self, storage: SQLiteStorage) -> None:
+        """Test creating a short code for an existing URL (should return same)."""
         url = "http://example.com"
-        short_url1 = await storage.get_short_url(url)
-        short_url2 = await storage.get_short_url(url)
+        short_url1 = await storage.create_short_code(url)
+        short_url2 = await storage.create_short_code(url)
 
         assert short_url1 == short_url2
 
     @pytest.mark.asyncio
     async def test_get_full_url_existing(self, storage: SQLiteStorage) -> None:
-        """Test getting full URL for existing short URL."""
+        """Test getting full URL for existing short code."""
         full_url = "http://example.com"
-        short_url = await storage.get_short_url(full_url)
+        short_url = await storage.create_short_code(full_url)
         short_code = short_url.split("/")[-1] if "/" in short_url else short_url
 
         retrieved_url = await storage.get_full_url(short_code)
@@ -83,7 +83,7 @@ class TestSQLiteStorage:
 
         short_urls = []
         for url in urls:
-            short_url = await storage.get_short_url(url)
+            short_url = await storage.create_short_code(url)
             short_urls.append(short_url)
 
         # All short URLs should be different
@@ -103,7 +103,7 @@ class TestSQLiteStorage:
         urls = [f"http://example{i}.com" for i in range(10)]
 
         # Create short URLs concurrently
-        tasks = [storage.get_short_url(url) for url in urls]
+        tasks = [storage.create_short_code(url) for url in urls]
         short_urls = await asyncio.gather(*tasks)
 
         # All short URLs should be different
@@ -125,7 +125,7 @@ class TestSQLiteStorage:
         # Create first storage instance
         storage1 = SQLiteStorage(encoder, temp_db_path)
         url = "http://example.com"
-        short_url = await storage1.get_short_url(url)
+        short_url = await storage1.create_short_code(url)
         short_code = short_url.split("/")[-1] if "/" in short_url else short_url
 
         # Create second storage instance with same database
@@ -147,7 +147,7 @@ class TestSQLiteStorage:
             storage._initialize_sync()
 
             url = "http://example.com"
-            short_url = await storage.get_short_url(url)
+            short_url = await storage.create_short_code(url)
             short_code = short_url.split("/")[-1] if "/" in short_url else short_url
 
             retrieved_url = await storage.get_full_url(short_code)
@@ -168,7 +168,7 @@ class TestSQLiteStorage:
         storage = SQLiteStorage(encoder, temp_db_path)
 
         # Check that database file exists after first operation
-        await storage.get_short_url("http://example.com")
+        await storage.create_short_code("http://example.com")
 
         # Verify table structure
         with sqlite3.connect(temp_db_path) as conn:
@@ -189,9 +189,9 @@ class TestSQLiteStorage:
         """Test that same URL always returns same short code."""
         url = "http://example.com"
 
-        short_url1 = await storage.get_short_url(url)
-        short_url2 = await storage.get_short_url(url)
-        short_url3 = await storage.get_short_url(url)
+        short_url1 = await storage.create_short_code(url)
+        short_url2 = await storage.create_short_code(url)
+        short_url3 = await storage.create_short_code(url)
 
         assert short_url1 == short_url2 == short_url3
 

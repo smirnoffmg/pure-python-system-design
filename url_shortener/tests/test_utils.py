@@ -1,6 +1,6 @@
 import pytest
 
-from url_shortener.utils import extract_domain, is_valid_url, normalize_url
+from url_shortener.infrastructure import extract_domain, is_valid_url, normalize_url
 
 
 class TestURLValidation:

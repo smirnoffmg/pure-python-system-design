@@ -8,13 +8,24 @@ from typing import Any
 
 import pytest
 
-from url_shortener.api import HTTPRequestParser, HTTPResponseSerializer
-from url_shortener.encoder import Base62Encoder
-from url_shortener.handlers import ResponseBuilder
-from url_shortener.service import Shortener
-from url_shortener.storage import InMemoryStorage, SQLiteStorage
-from url_shortener.types import HTTPResponse
-from url_shortener.utils import extract_domain, is_valid_url, normalize_url
+from url_shortener.application import Shortener
+from url_shortener.domain import Base62Encoder
+from url_shortener.infrastructure import (
+    HTTPRequestParser,
+    HTTPResponse,
+    HTTPResponseSerializer,
+    InMemoryStorage,
+    SQLiteStorage,
+    extract_domain,
+    is_valid_url,
+    normalize_url,
+)
+from url_shortener.presentation import (
+    error_response,
+    json_response,
+    not_found,
+    redirect_response,
+)
 
 
 class TestEncoderBenchmarks:
@@ -119,7 +130,7 @@ class TestStorageBenchmarks:
         def get_short_urls():
             async def _async_operation():
                 for url in urls:
-                    await in_memory_storage.get_short_url(url)
+                    await in_memory_storage.create_short_code(url)
 
             asyncio.run(_async_operation())
 
@@ -135,7 +146,7 @@ class TestStorageBenchmarks:
         async def _setup():
             short_urls = []
             for url in urls:
-                short_url = await in_memory_storage.get_short_url(url)
+                short_url = await in_memory_storage.create_short_code(url)
                 short_urls.append(short_url)
             return short_urls
 
@@ -159,7 +170,7 @@ class TestStorageBenchmarks:
         def get_short_urls():
             async def _async_operation():
                 for url in urls:
-                    await sqlite_storage.get_short_url(url)
+                    await sqlite_storage.create_short_code(url)
 
             asyncio.run(_async_operation())
 
@@ -175,7 +186,7 @@ class TestStorageBenchmarks:
         async def _setup():
             short_urls = []
             for url in urls:
-                short_url = await sqlite_storage.get_short_url(url)
+                short_url = await sqlite_storage.create_short_code(url)
                 short_urls.append(short_url)
             return short_urls
 
@@ -198,7 +209,7 @@ class TestStorageBenchmarks:
 
         def concurrent_operations():
             async def _async_operation():
-                tasks = [in_memory_storage.get_short_url(url) for url in urls]
+                tasks = [in_memory_storage.create_short_code(url) for url in urls]
                 await asyncio.gather(*tasks)
 
             asyncio.run(_async_operation())
@@ -213,7 +224,7 @@ class TestStorageBenchmarks:
 
         def concurrent_operations():
             async def _async_operation():
-                tasks = [sqlite_storage.get_short_url(url) for url in urls]
+                tasks = [sqlite_storage.create_short_code(url) for url in urls]
                 await asyncio.gather(*tasks)
 
             asyncio.run(_async_operation())
@@ -262,7 +273,7 @@ class TestServiceBenchmarks:
         def shorten_urls():
             async def _async_operation():
                 for url in urls:
-                    await in_memory_shortener.get_short_url(url)
+                    await in_memory_shortener.create_short_code(url)
 
             asyncio.run(_async_operation())
 
@@ -277,7 +288,7 @@ class TestServiceBenchmarks:
         def shorten_urls():
             async def _async_operation():
                 for url in urls:
-                    await sqlite_shortener.get_short_url(url)
+                    await sqlite_shortener.create_short_code(url)
 
             asyncio.run(_async_operation())
 
@@ -293,7 +304,7 @@ class TestServiceBenchmarks:
         async def _setup():
             short_urls = []
             for url in urls:
-                short_url = await in_memory_shortener.get_short_url(url)
+                short_url = await in_memory_shortener.create_short_code(url)
                 short_urls.append(short_url)
             return short_urls
 
@@ -318,7 +329,7 @@ class TestServiceBenchmarks:
         async def _setup():
             short_urls = []
             for url in urls:
-                short_url = await sqlite_shortener.get_short_url(url)
+                short_url = await sqlite_shortener.create_short_code(url)
                 short_urls.append(short_url)
             return short_urls
 
@@ -416,7 +427,7 @@ class TestAPIBenchmarks:
     def test_http_response_serialization(self, benchmark: Any) -> None:
         """Benchmark HTTP response serialization."""
         responses = [
-            HTTPResponse(201, "Created", {"short_url": "http://localhost:8000/abc123"}),
+            HTTPResponse(201, "Created", {"short_code": "abc123"}),
             HTTPResponse(404, "Not Found"),
             HTTPResponse(302, "Found", headers={"Location": "http://example.com"}),
             HTTPResponse(400, "Bad Request", {"error": "Invalid URL"}),
@@ -433,10 +444,10 @@ class TestAPIBenchmarks:
 
         def build_responses():
             for i in range(1000):
-                ResponseBuilder.json_response(201, "Created", {"short_url": f"abc{i}"})
-                ResponseBuilder.error_response(400, "Bad Request", "Invalid URL")
-                ResponseBuilder.redirect_response(f"http://example{i}.com")
-                ResponseBuilder.not_found()
+                json_response(201, "Created", {"short_code": f"abc{i}"})
+            error_response(400, "Bad Request", "Invalid URL")
+            redirect_response(f"http://example{i}.com")
+            not_found()
 
         benchmark(build_responses)
 
@@ -465,7 +476,7 @@ class TestEndToEndBenchmarks:
             async def _async_operation():
                 for url in urls:
                     # Shorten
-                    short_url = await in_memory_shortener.get_short_url(url)
+                    short_url = await in_memory_shortener.create_short_code(url)
                     # Expand
                     expanded_url = await in_memory_shortener.get_full_url(short_url)
                     assert expanded_url == url
@@ -481,7 +492,7 @@ class TestEndToEndBenchmarks:
         urls = [f"http://example{i}.com" for i in range(50)]
 
         async def single_operation(url: str) -> None:
-            short_url = await in_memory_shortener.get_short_url(url)
+            short_url = await in_memory_shortener.create_short_code(url)
             expanded_url = await in_memory_shortener.get_full_url(short_url)
             assert expanded_url == url
 

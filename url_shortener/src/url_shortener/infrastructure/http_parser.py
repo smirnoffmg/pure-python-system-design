@@ -2,8 +2,10 @@
 HTTP parsing utilities for the URL shortener service.
 """
 
-from .logger import logger
+from .logger import get_logger
 from .types import HTTPRequest
+
+logger = get_logger(__name__)
 
 
 class HTTPRequestParser:

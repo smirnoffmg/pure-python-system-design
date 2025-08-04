@@ -25,9 +25,3 @@ class EncodingError(URLShortenerError):
     """Raised when encoding/decoding operations fail."""
 
     pass
-
-
-class HTTPError(URLShortenerError):
-    """Raised when HTTP processing fails."""
-
-    pass
