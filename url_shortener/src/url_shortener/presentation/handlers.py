@@ -153,6 +153,12 @@ async def handle_redirect(request: HTTPRequest, shortener: Shortener) -> HTTPRes
         return not_found()
 
 
+@get_handler("/health")
+async def handle_health(request: HTTPRequest, shortener: Shortener) -> HTTPResponse:
+    """Handle GET /health requests."""
+    return json_response(200, "OK", {"status": "healthy", "service": "url_shortener"})
+
+
 class HandlerRegistry:
     """Registry for HTTP method handlers."""
 
@@ -160,6 +166,7 @@ class HandlerRegistry:
         self.shortener = shortener
         self._handlers: dict[tuple[str, str], HandlerFunction] = {
             ("POST", "/shorten"): handle_shorten,
+            ("GET", "/health"): handle_health,
         }
 
     def get_handler(

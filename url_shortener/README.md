@@ -9,6 +9,44 @@ Pure Python URL shortener service using `asyncio`.
 - **Storage**: `InMemoryStorage` and `SQLiteStorage`
 - **Encoder**: `Base62Encoder`
 
+```mermaid
+graph TB
+    subgraph "Presentation Layer"
+        HTTP[HTTP Protocol]
+        Handler[Request Handler]
+        Registry[Handler Registry]
+    end
+    
+    subgraph "Application Layer"
+        Service[Shortener Service]
+        BaseService[Base Shortener]
+    end
+    
+    subgraph "Domain Layer"
+        Encoder[Base62 Encoder]
+        Exceptions[Business Exceptions]
+    end
+    
+    subgraph "Infrastructure Layer"
+        Storage[Storage Implementations]
+        HTTPUtils[HTTP Utils]
+        Config[Configuration]
+        Factory[Factory Functions]
+    end
+    
+    HTTP --> Handler
+    Handler --> Registry
+    Registry --> Service
+    Service --> BaseService
+    BaseService --> Storage
+    Service --> Encoder
+    Service --> Exceptions
+    Storage --> Factory
+    HTTPUtils --> Factory
+    Config --> Factory
+    Factory --> Service
+```
+
 ## Constraints
 
 - **Package Manager**: `uv` only
@@ -21,6 +59,7 @@ Pure Python URL shortener service using `asyncio`.
 
 - `POST /shorten` - Create short URL (returns "http://domain/short_code")
 - `GET /<short_code>` - Redirect to long URL (returns 302) or 404 if not found
+- `GET /health` - Health check endpoint
 
 ## Race conditions
 
