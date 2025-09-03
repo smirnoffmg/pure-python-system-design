@@ -2,6 +2,7 @@
 Infrastructure layer - External concerns (storage, HTTP, logging).
 """
 
+from .config import Config, ServerConfig, StorageConfig
 from .database import DatabaseManager
 from .exceptions import HTTPError
 from .http_parser import HTTPRequestParser
@@ -15,6 +16,9 @@ __all__ = [
     "BaseStorage",
     "InMemoryStorage",
     "SQLiteStorage",
+    "Config",
+    "ServerConfig",
+    "StorageConfig",
     "DatabaseManager",
     "HTTPRequestParser",
     "HTTPResponseSerializer",

@@ -20,7 +20,7 @@ Pure Python URL shortener service using `asyncio`.
 ## API
 
 - `POST /shorten` - Create short URL (returns "http://domain/short_code")
-- `GET /<short_code>` - Redirect to long URL (returns 302)
+- `GET /<short_code>` - Redirect to long URL (returns 302) or 404 if not found
 
 ## Race conditions
 

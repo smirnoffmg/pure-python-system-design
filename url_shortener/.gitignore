@@ -217,6 +217,7 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+.cursor/
 
 ### VisualStudioCode ###
 .vscode/*

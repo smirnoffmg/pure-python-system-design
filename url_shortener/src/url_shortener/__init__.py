@@ -32,6 +32,8 @@ from .infrastructure import (
     is_valid_url,
     normalize_url,
 )
+from .infrastructure.config import Config, ServerConfig, StorageConfig
+from .infrastructure.factory import create_shortener, create_storage
 
 # Presentation layer - HTTP handlers and API
 from .presentation import (
@@ -45,6 +47,7 @@ from .presentation import (
     not_found,
     redirect_response,
     serve,
+    shutdown,
 )
 
 __all__ = [
@@ -72,10 +75,16 @@ __all__ = [
     "normalize_url",
     "extract_domain",
     "get_logger",
+    "Config",
+    "ServerConfig",
+    "StorageConfig",
+    "create_storage",
+    "create_shortener",
     # Presentation
     "HTTPProtocol",
     "RequestHandler",
     "serve",
+    "shutdown",
     "HandlerRegistry",
     "handle_shorten",
     "handle_redirect",

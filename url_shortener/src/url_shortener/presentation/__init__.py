@@ -3,7 +3,7 @@ Presentation layer - HTTP handlers and API endpoints.
 """
 
 from ..infrastructure import HTTPError, HTTPRequest, HTTPResponse
-from .api import HTTPProtocol, RequestHandler, serve
+from .api import HTTPProtocol, RequestHandler, serve, shutdown
 from .handlers import (
     HandlerRegistry,
     error_response,
@@ -21,6 +21,7 @@ __all__ = [
     "HTTPProtocol",
     "RequestHandler",
     "serve",
+    "shutdown",
     "HTTPRequest",
     "HTTPResponse",
     "HTTPError",
