@@ -1,0 +1,61 @@
+@startuml
+actor User
+participant HTTP_API
+participant Service
+participant Storage
+participant Encoder
+
+== Создание короткой ссылки ==
+
+User -> HTTP_API : POST /create (full_url)
+activate HTTP_API
+
+HTTP_API -> Service : get_short_code(full_url)
+activate Service
+
+Service -> Storage : get_short_code(full_url)
+activate Storage
+Storage --> Service : None (URL not found)
+deactivate Storage
+
+Service -> Encoder : encode(new_id)
+activate Encoder
+Encoder --> Service : short_code
+deactivate Encoder
+
+Service -> Storage : save(short_code, full_url)
+activate Storage
+Storage --> Service : OK
+deactivate Storage
+
+Service --> HTTP_API : short_code
+deactivate Service
+
+HTTP_API --> User : 201 Created\n{short_url}
+deactivate HTTP_API
+
+== Получение полного URL по короткому коду ==
+
+User -> HTTP_API : GET /{short_code}
+activate HTTP_API
+
+HTTP_API -> Service : get_full_url(short_code)
+activate Service
+
+Service -> Storage : get_full_url(short_code)
+activate Storage
+Storage --> Service : full_url / None
+deactivate Storage
+
+alt URL найден
+    Service --> HTTP_API : full_url
+    HTTP_API --> User : 302 Redirect\nLocation: full_url
+else URL не найден
+    Service --> HTTP_API : None
+    HTTP_API --> User : 404 Not Found
+end
+
+deactivate Service
+deactivate HTTP_API
+
+@enduml
