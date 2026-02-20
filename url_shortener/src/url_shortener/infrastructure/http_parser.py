@@ -14,7 +14,7 @@ class HTTPRequestParser:
     """
 
     @staticmethod
-    def parse(raw_data: bytes) -> HTTPRequest | None:
+    def parse(raw_data: bytes | bytearray) -> HTTPRequest | None:
         """
         Parse raw HTTP request data into HTTPRequest object.
 
@@ -61,7 +61,7 @@ class HTTPRequestParser:
         return headers
 
     @staticmethod
-    def _parse_body(headers: dict[str, str], body_part: bytes) -> str | None:
+    def _parse_body(headers: dict[str, str], body_part: bytes | bytearray) -> str | None:
         """Parse HTTP body based on content length."""
         content_length = int(headers.get("content-length", 0))
 
