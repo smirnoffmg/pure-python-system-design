@@ -111,9 +111,7 @@ class TestShortenHandler:
 
         response = await handle_shorten(request, shortener)
 
-        assert (
-            response.status_code == 400
-        )  # Should fail validation since we require protocol
+        assert response.status_code == 400  # Should fail validation since we require protocol
         assert response.body["error"] == "Invalid URL format"
 
 

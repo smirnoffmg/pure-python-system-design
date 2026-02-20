@@ -91,9 +91,7 @@ class TestSQLiteStorage:
 
         # Should be able to retrieve all full URLs
         for i, url in enumerate(urls):
-            short_code = (
-                short_urls[i].split("/")[-1] if "/" in short_urls[i] else short_urls[i]
-            )
+            short_code = short_urls[i].split("/")[-1] if "/" in short_urls[i] else short_urls[i]
             retrieved_url = await storage.get_full_url(short_code)
             assert retrieved_url == url
 
@@ -118,9 +116,7 @@ class TestSQLiteStorage:
         assert retrieved_urls == urls
 
     @pytest.mark.asyncio
-    async def test_database_persistence(
-        self, encoder: Base62Encoder, temp_db_path: str
-    ) -> None:
+    async def test_database_persistence(self, encoder: Base62Encoder, temp_db_path: str) -> None:
         """Test that data persists between storage instances."""
         # Create first storage instance
         storage1 = SQLiteStorage(encoder, temp_db_path)
@@ -161,9 +157,7 @@ class TestSQLiteStorage:
                 os.unlink(temp_db_path)
 
     @pytest.mark.asyncio
-    async def test_database_initialization(
-        self, encoder: Base62Encoder, temp_db_path: str
-    ) -> None:
+    async def test_database_initialization(self, encoder: Base62Encoder, temp_db_path: str) -> None:
         """Test that database is properly initialized."""
         storage = SQLiteStorage(encoder, temp_db_path)
 
@@ -172,9 +166,7 @@ class TestSQLiteStorage:
 
         # Verify table structure
         with sqlite3.connect(temp_db_path) as conn:
-            cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='url_mapping'"
-            )
+            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='url_mapping'")
             assert cursor.fetchone() is not None
 
             cursor = conn.execute("PRAGMA table_info(url_mapping)")

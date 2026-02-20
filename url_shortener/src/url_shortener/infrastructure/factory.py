@@ -8,9 +8,7 @@ from . import InMemoryStorage, SQLiteStorage
 from .config import Config
 
 
-def create_storage(
-    config: Config, encoder: BaseEncoder
-) -> InMemoryStorage | SQLiteStorage:
+def create_storage(config: Config, encoder: BaseEncoder) -> InMemoryStorage | SQLiteStorage:
     """Create storage instance based on configuration."""
     if config.storage.type == "memory":
         return InMemoryStorage(encoder)

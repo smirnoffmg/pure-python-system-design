@@ -76,9 +76,7 @@ class TestEncoderBenchmarks:
 
         benchmark(decode_large)
 
-    def test_encode_decode_roundtrip(
-        self, encoder: Base62Encoder, benchmark: Any
-    ) -> None:
+    def test_encode_decode_roundtrip(self, encoder: Base62Encoder, benchmark: Any) -> None:
         """Benchmark encode-decode roundtrip."""
 
         def roundtrip():
@@ -121,9 +119,7 @@ class TestStorageBenchmarks:
 
         return storage
 
-    def test_in_memory_get_short_url(
-        self, in_memory_storage: InMemoryStorage, benchmark: Any
-    ) -> None:
+    def test_in_memory_get_short_url(self, in_memory_storage: InMemoryStorage, benchmark: Any) -> None:
         """Benchmark getting short URLs from in-memory storage."""
         urls = [f"http://example{i}.com" for i in range(1000)]
 
@@ -136,9 +132,7 @@ class TestStorageBenchmarks:
 
         benchmark(get_short_urls)
 
-    def test_in_memory_get_full_url(
-        self, in_memory_storage: InMemoryStorage, benchmark: Any
-    ) -> None:
+    def test_in_memory_get_full_url(self, in_memory_storage: InMemoryStorage, benchmark: Any) -> None:
         """Benchmark getting full URLs from in-memory storage."""
         # Pre-populate storage
         urls = [f"http://example{i}.com" for i in range(1000)]
@@ -161,9 +155,7 @@ class TestStorageBenchmarks:
 
         benchmark(get_full_urls)
 
-    def test_sqlite_get_short_url(
-        self, sqlite_storage: SQLiteStorage, benchmark: Any
-    ) -> None:
+    def test_sqlite_get_short_url(self, sqlite_storage: SQLiteStorage, benchmark: Any) -> None:
         """Benchmark getting short URLs from SQLite storage."""
         urls = [f"http://example{i}.com" for i in range(100)]
 
@@ -176,9 +168,7 @@ class TestStorageBenchmarks:
 
         benchmark(get_short_urls)
 
-    def test_sqlite_get_full_url(
-        self, sqlite_storage: SQLiteStorage, benchmark: Any
-    ) -> None:
+    def test_sqlite_get_full_url(self, sqlite_storage: SQLiteStorage, benchmark: Any) -> None:
         """Benchmark getting full URLs from SQLite storage."""
         # Pre-populate storage
         urls = [f"http://example{i}.com" for i in range(100)]
@@ -201,9 +191,7 @@ class TestStorageBenchmarks:
 
         benchmark(get_full_urls)
 
-    def test_concurrent_in_memory_operations(
-        self, in_memory_storage: InMemoryStorage, benchmark: Any
-    ) -> None:
+    def test_concurrent_in_memory_operations(self, in_memory_storage: InMemoryStorage, benchmark: Any) -> None:
         """Benchmark concurrent operations on in-memory storage."""
         urls = [f"http://example{i}.com" for i in range(100)]
 
@@ -216,9 +204,7 @@ class TestStorageBenchmarks:
 
         benchmark(concurrent_operations)
 
-    def test_concurrent_sqlite_operations(
-        self, sqlite_storage: SQLiteStorage, benchmark: Any
-    ) -> None:
+    def test_concurrent_sqlite_operations(self, sqlite_storage: SQLiteStorage, benchmark: Any) -> None:
         """Benchmark concurrent operations on SQLite storage."""
         urls = [f"http://example{i}.com" for i in range(50)]
 
@@ -264,9 +250,7 @@ class TestServiceBenchmarks:
 
         return Shortener(storage)
 
-    def test_in_memory_shorten_urls(
-        self, in_memory_shortener: Shortener, benchmark: Any
-    ) -> None:
+    def test_in_memory_shorten_urls(self, in_memory_shortener: Shortener, benchmark: Any) -> None:
         """Benchmark shortening URLs with in-memory storage."""
         urls = [f"http://example{i}.com" for i in range(1000)]
 
@@ -279,9 +263,7 @@ class TestServiceBenchmarks:
 
         benchmark(shorten_urls)
 
-    def test_sqlite_shorten_urls(
-        self, sqlite_shortener: Shortener, benchmark: Any
-    ) -> None:
+    def test_sqlite_shorten_urls(self, sqlite_shortener: Shortener, benchmark: Any) -> None:
         """Benchmark shortening URLs with SQLite storage."""
         urls = [f"http://example{i}.com" for i in range(100)]
 
@@ -294,9 +276,7 @@ class TestServiceBenchmarks:
 
         benchmark(shorten_urls)
 
-    def test_in_memory_expand_urls(
-        self, in_memory_shortener: Shortener, benchmark: Any
-    ) -> None:
+    def test_in_memory_expand_urls(self, in_memory_shortener: Shortener, benchmark: Any) -> None:
         """Benchmark expanding URLs with in-memory storage."""
         # Pre-populate with short URLs
         urls = [f"http://example{i}.com" for i in range(1000)]
@@ -319,9 +299,7 @@ class TestServiceBenchmarks:
 
         benchmark(expand_urls)
 
-    def test_sqlite_expand_urls(
-        self, sqlite_shortener: Shortener, benchmark: Any
-    ) -> None:
+    def test_sqlite_expand_urls(self, sqlite_shortener: Shortener, benchmark: Any) -> None:
         """Benchmark expanding URLs with SQLite storage."""
         # Pre-populate with short URLs
         urls = [f"http://example{i}.com" for i in range(100)]
@@ -410,7 +388,7 @@ class TestAPIBenchmarks:
             b"Content-Length: 25\r\n"
             b"\r\n"
             b'{"url": "http://example.com"}',
-            b"GET /abc123 HTTP/1.1\r\n" b"Host: localhost:8000\r\n" b"\r\n",
+            b"GET /abc123 HTTP/1.1\r\nHost: localhost:8000\r\n\r\n",
             b"POST /shorten HTTP/1.1\r\n"
             b"Content-Type: application/json\r\n"
             b"Content-Length: 30\r\n"
@@ -466,9 +444,7 @@ class TestEndToEndBenchmarks:
         storage = InMemoryStorage(encoder)
         return Shortener(storage)
 
-    def test_end_to_end_shorten_expand(
-        self, in_memory_shortener: Shortener, benchmark: Any
-    ) -> None:
+    def test_end_to_end_shorten_expand(self, in_memory_shortener: Shortener, benchmark: Any) -> None:
         """Benchmark complete shorten and expand operations."""
         urls = [f"http://example{i}.com" for i in range(100)]
 
@@ -485,9 +461,7 @@ class TestEndToEndBenchmarks:
 
         benchmark(end_to_end_operations)
 
-    def test_concurrent_end_to_end(
-        self, in_memory_shortener: Shortener, benchmark: Any
-    ) -> None:
+    def test_concurrent_end_to_end(self, in_memory_shortener: Shortener, benchmark: Any) -> None:
         """Benchmark concurrent end-to-end operations."""
         urls = [f"http://example{i}.com" for i in range(50)]
 

@@ -84,9 +84,7 @@ class TestConfig:
     def test_validation_invalid_storage_type(self) -> None:
         """Test configuration validation with invalid storage type."""
         config = Config(storage=StorageConfig(type="invalid"))  # type: ignore[arg-type]
-        with pytest.raises(
-            ValueError, match="Storage type must be 'memory' or 'sqlite'"
-        ):
+        with pytest.raises(ValueError, match="Storage type must be 'memory' or 'sqlite'"):
             config.validate()
 
     def test_validation_sqlite_without_path(self) -> None:

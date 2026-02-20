@@ -4,9 +4,7 @@ from url_shortener.domain import Base62Encoder
 
 
 def test_encode_negative_number(encoder: Base62Encoder):
-    with pytest.raises(
-        ValueError, match="Base62 encoding does not support negative numbers."
-    ):
+    with pytest.raises(ValueError, match="Base62 encoding does not support negative numbers."):
         encoder.encode(-1)
 
 

@@ -25,21 +25,15 @@ class HandlerFunction(Protocol):
     _method: str
     _path: str
 
-    def __call__(
-        self, request: HTTPRequest, shortener: Shortener
-    ) -> Awaitable[HTTPResponse]: ...
+    def __call__(self, request: HTTPRequest, shortener: Shortener) -> Awaitable[HTTPResponse]: ...
 
 
-def json_response(
-    status_code: int, status_message: str, data: dict[str, Any]
-) -> HTTPResponse:
+def json_response(status_code: int, status_message: str, data: dict[str, Any]) -> HTTPResponse:
     """Create a JSON response."""
     return HTTPResponse(status_code, status_message, data)
 
 
-def error_response(
-    status_code: int, status_message: str, error_message: str
-) -> HTTPResponse:
+def error_response(status_code: int, status_message: str, error_message: str) -> HTTPResponse:
     """Create an error response with consistent error format."""
     return HTTPResponse(status_code, status_message, {"error": error_message})
 
@@ -76,9 +70,7 @@ def handle_errors(
                 return error_response(400, "Bad Request", "Invalid JSON format")
             except Exception as e:
                 logger.error(f"Error in {operation}: {e}")
-                return error_response(
-                    500, "Internal Server Error", "Internal server error"
-                )
+                return error_response(500, "Internal Server Error", "Internal server error")
 
         return wrapper
 
@@ -87,9 +79,7 @@ def handle_errors(
 
 def post_handler(
     path: str,
-) -> Callable[
-    [Callable[[HTTPRequest, Shortener], Awaitable[HTTPResponse]]], HandlerFunction
-]:
+) -> Callable[[Callable[[HTTPRequest, Shortener], Awaitable[HTTPResponse]]], HandlerFunction]:
     """Decorator for POST method handlers."""
 
     def decorator(
@@ -105,9 +95,7 @@ def post_handler(
 
 def get_handler(
     path: str,
-) -> Callable[
-    [Callable[[HTTPRequest, Shortener], Awaitable[HTTPResponse]]], HandlerFunction
-]:
+) -> Callable[[Callable[[HTTPRequest, Shortener], Awaitable[HTTPResponse]]], HandlerFunction]:
     """Decorator for GET method handlers."""
 
     def decorator(
@@ -169,9 +157,7 @@ class HandlerRegistry:
             ("GET", "/health"): handle_health,
         }
 
-    def get_handler(
-        self, method: str, path: str
-    ) -> Callable[[HTTPRequest], Awaitable[HTTPResponse]] | None:
+    def get_handler(self, method: str, path: str) -> Callable[[HTTPRequest], Awaitable[HTTPResponse]] | None:
         """Get handler for specific method and path."""
         # Exact match
         handler = self._handlers.get((method, path))

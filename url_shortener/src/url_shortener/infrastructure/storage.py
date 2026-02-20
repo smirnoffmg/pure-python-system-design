@@ -91,16 +91,12 @@ class SQLiteStorage(BaseStorage):
         def sync_get_or_insert() -> str:
             try:
                 with self.db_manager.get_connection() as conn:
-                    cursor = conn.execute(
-                        "SELECT id FROM url_mapping WHERE full_url = ?", (url,)
-                    )
+                    cursor = conn.execute("SELECT id FROM url_mapping WHERE full_url = ?", (url,))
                     row = cursor.fetchone()
                     if row:
                         return self.encoder.encode(row[0])
 
-                    cursor = conn.execute(
-                        "INSERT INTO url_mapping (full_url) VALUES (?)", (url,)
-                    )
+                    cursor = conn.execute("INSERT INTO url_mapping (full_url) VALUES (?)", (url,))
                     conn.commit()
                     last_id = cursor.lastrowid or 1
                     return self.encoder.encode(last_id)
@@ -124,9 +120,7 @@ class SQLiteStorage(BaseStorage):
 
             try:
                 with self.db_manager.get_connection() as conn:
-                    cursor = conn.execute(
-                        "SELECT full_url FROM url_mapping WHERE id = ?", (id,)
-                    )
+                    cursor = conn.execute("SELECT full_url FROM url_mapping WHERE id = ?", (id,))
                     row = cursor.fetchone()
                     return row[0] if row else None
             except Exception as e:

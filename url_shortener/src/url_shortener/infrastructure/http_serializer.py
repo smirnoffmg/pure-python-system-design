@@ -3,6 +3,7 @@ HTTP response serialization utilities.
 """
 
 import json
+from typing import Any
 
 from .types import HTTPResponse
 
@@ -29,7 +30,7 @@ class HTTPResponseSerializer:
         return "\r\n".join(lines).encode()
 
     @staticmethod
-    def _serialize_body(body: dict | None, headers: dict[str, str]) -> str:
+    def _serialize_body(body: dict[str, Any] | None, headers: dict[str, str]) -> str:
         """Serialize response body and update headers accordingly."""
         if body is not None:
             body_str = json.dumps(body)

@@ -61,9 +61,7 @@ class TestMainModule:
 
     @patch("url_shortener.presentation.serve")
     @patch("asyncio.run")
-    def test_main_with_exception_handling(
-        self, mock_asyncio_run: MagicMock, mock_serve: AsyncMock
-    ) -> None:
+    def test_main_with_exception_handling(self, mock_asyncio_run: MagicMock, mock_serve: AsyncMock) -> None:
         """Test main execution with exception handling."""
         # Mock serve to raise an exception
         mock_serve.side_effect = Exception("Test error")

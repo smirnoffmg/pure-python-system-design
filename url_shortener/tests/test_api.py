@@ -32,9 +32,7 @@ class TestHTTPRequest:
     def test_http_request_creation(self) -> None:
         """Test creating an HTTPRequest instance."""
         headers = {"content-type": "application/json"}
-        request = HTTPRequest(
-            "POST", "/shorten", "HTTP/1.1", headers, '{"url": "http://example.com"}'
-        )
+        request = HTTPRequest("POST", "/shorten", "HTTP/1.1", headers, '{"url": "http://example.com"}')
 
         assert request.method == "POST"
         assert request.path == "/shorten"
@@ -84,7 +82,7 @@ class TestHTTPRequestParser:
 
     def test_parse_request_without_body(self) -> None:
         """Test parsing a request without body."""
-        raw_request = b"GET /abc123 HTTP/1.1\r\n" b"Host: localhost:8000\r\n" b"\r\n"
+        raw_request = b"GET /abc123 HTTP/1.1\r\nHost: localhost:8000\r\n\r\n"
 
         request = HTTPRequestParser.parse(raw_request)
 
@@ -95,7 +93,7 @@ class TestHTTPRequestParser:
 
     def test_parse_request_with_content_length_zero(self) -> None:
         """Test parsing a request with Content-Length: 0."""
-        raw_request = b"GET /abc123 HTTP/1.1\r\n" b"Content-Length: 0\r\n" b"\r\n"
+        raw_request = b"GET /abc123 HTTP/1.1\r\nContent-Length: 0\r\n\r\n"
 
         request = HTTPRequestParser.parse(raw_request)
 
@@ -110,9 +108,7 @@ class TestHTTPResponse:
 
     def test_response_with_body(self) -> None:
         """Test creating a response with JSON body."""
-        response = HTTPResponse(
-            201, "Created", {"short_url": "http://localhost:8000/abc123"}
-        )
+        response = HTTPResponse(201, "Created", {"short_url": "http://localhost:8000/abc123"})
 
         serialized = HTTPResponseSerializer.serialize(response)
         assert b"HTTP/1.1 201 Created" in serialized
@@ -277,9 +273,7 @@ class TestHTTPProtocol:
         pass
 
     @pytest.mark.asyncio
-    async def test_process_request(
-        self, protocol: HTTPProtocol, request_handler: RequestHandler
-    ) -> None:
+    async def test_process_request(self, protocol: HTTPProtocol, request_handler: RequestHandler) -> None:
         """Test _process_request method."""
         # Mock the transport
         mock_transport = MagicMock()
@@ -296,9 +290,7 @@ class TestHTTPProtocol:
             protocol.request_handler = request_handler
 
             # Mock the serializer
-            with patch(
-                "url_shortener.presentation.api.HTTPResponseSerializer"
-            ) as mock_serializer:
+            with patch("url_shortener.presentation.api.HTTPResponseSerializer") as mock_serializer:
                 mock_serializer.serialize.return_value = b"HTTP/1.1 200 OK\r\n\r\nOK"
 
                 await protocol._process_request(mock_request)

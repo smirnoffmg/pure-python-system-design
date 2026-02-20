@@ -37,20 +37,14 @@ class TestLogger:
         """Test that get_logger creates a console handler."""
         test_logger = get_logger("test_console_logger")
 
-        console_handlers = [
-            h for h in test_logger.handlers if isinstance(h, logging.StreamHandler)
-        ]
+        console_handlers = [h for h in test_logger.handlers if isinstance(h, logging.StreamHandler)]
         assert len(console_handlers) > 0
 
     def test_get_logger_file_handler(self) -> None:
         """Test that get_logger creates a file handler."""
         test_logger = get_logger("test_file_logger")
 
-        file_handlers = [
-            h
-            for h in test_logger.handlers
-            if isinstance(h, logging.handlers.RotatingFileHandler)
-        ]
+        file_handlers = [h for h in test_logger.handlers if isinstance(h, logging.handlers.RotatingFileHandler)]
         assert len(file_handlers) > 0
 
     def test_get_logger_formatter(self) -> None:
@@ -89,11 +83,7 @@ class TestLogger:
         """Test that file handler is configured correctly."""
         test_logger = get_logger("test_file_config")
 
-        file_handlers = [
-            h
-            for h in test_logger.handlers
-            if isinstance(h, logging.handlers.RotatingFileHandler)
-        ]
+        file_handlers = [h for h in test_logger.handlers if isinstance(h, logging.handlers.RotatingFileHandler)]
         assert len(file_handlers) > 0
 
         file_handler = file_handlers[0]
@@ -104,9 +94,7 @@ class TestLogger:
         """Test that console handler has correct level."""
         test_logger = get_logger("test_console_level")
 
-        console_handlers = [
-            h for h in test_logger.handlers if isinstance(h, logging.StreamHandler)
-        ]
+        console_handlers = [h for h in test_logger.handlers if isinstance(h, logging.StreamHandler)]
         assert len(console_handlers) > 0
 
         console_handler = console_handlers[0]
@@ -116,11 +104,7 @@ class TestLogger:
         """Test that file handler has correct level."""
         test_logger = get_logger("test_file_level")
 
-        file_handlers = [
-            h
-            for h in test_logger.handlers
-            if isinstance(h, logging.handlers.RotatingFileHandler)
-        ]
+        file_handlers = [h for h in test_logger.handlers if isinstance(h, logging.handlers.RotatingFileHandler)]
         assert len(file_handlers) > 0
 
         file_handler = file_handlers[0]
