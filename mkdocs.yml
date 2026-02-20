@@ -7,14 +7,18 @@ repo_name: pure-python-system-design
 
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
   features:
     - content.code.copy
     - content.code.annotate
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.indexes
     - search.highlight
     - search.share
+    - toc.follow
   palette:
     - scheme: default
       primary: deep purple
@@ -39,6 +43,9 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - admonition
   - pymdownx.details
   - attr_list
