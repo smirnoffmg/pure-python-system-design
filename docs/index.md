@@ -14,5 +14,6 @@ No frameworks. No dependencies. Just coroutines, standard libs, and the irration
 | Module | Description |
 |--------|-------------|
 | [URL Shortener](url_shortener/index.md) | Async, minimal, and absolutely unnecessary. |
+| [Rate Limiter](rate_limiter/index.md) | Pluggable strategies, zero dependencies, maximum regret. |
 
 More designs to come, if I don't burn out first.
