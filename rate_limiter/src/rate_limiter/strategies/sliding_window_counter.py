@@ -41,4 +41,45 @@ Example:
     await strategy.allow()  # True if estimated rate < 100 req/60s
 """
 
-raise NotImplementedError
+import asyncio
+from datetime import datetime, timedelta
+
+
+class SlidingWindowCounterStrategy:
+    def __init__(self, capacity: int, window_size: int):
+        self._capacity = capacity
+        self._window_size = window_size
+        self._current_count = 0
+        self._previous_count = 0
+        self._window_start = datetime.now()
+        self._lock = asyncio.Lock()
+
+    def _rotate(self, now: datetime) -> None:
+        elapsed = (now - self._window_start).total_seconds()
+
+        if elapsed >= 2 * self._window_size:
+            self._previous_count = 0
+            self._current_count = 0
+            self._window_start = now
+        elif elapsed >= self._window_size:
+            self._previous_count = self._current_count
+            self._current_count = 0
+            self._window_start = self._window_start + timedelta(
+                seconds=self._window_size
+            )
+
+    def _estimate(self, now: datetime) -> float:
+        elapsed_in_window = (now - self._window_start).total_seconds()
+        weight = 1.0 - (elapsed_in_window / self._window_size)
+        return self._previous_count * weight + self._current_count
+
+    async def allow(self, *args, **kwargs) -> bool:
+        async with self._lock:
+            now = datetime.now()
+            self._rotate(now)
+
+            if self._estimate(now) < self._capacity:
+                self._current_count += 1
+                return True
+
+            return False

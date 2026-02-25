@@ -33,4 +33,30 @@ Example:
     await strategy.allow()  # True if <100 requests in the last 60s
 """
 
-raise NotImplementedError
+import asyncio
+from collections import deque
+from datetime import datetime, timedelta
+
+
+class SlidingWindowLogStrategy:
+    def __init__(self, capacity: int, window_size: int):
+        self._capacity = capacity
+        self._window_size = timedelta(seconds=window_size)
+        self._log: deque[datetime] = deque()
+        self._lock = asyncio.Lock()
+
+    def _evict(self, now: datetime) -> None:
+        cutoff = now - self._window_size
+        while self._log and self._log[0] <= cutoff:
+            self._log.popleft()
+
+    async def allow(self, *args, **kwargs) -> bool:
+        async with self._lock:
+            now = datetime.now()
+            self._evict(now)
+
+            if len(self._log) < self._capacity:
+                self._log.append(now)
+                return True
+
+            return False

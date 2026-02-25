@@ -40,4 +40,22 @@ Example:
             await strategy.release()
 """
 
-raise NotImplementedError
+import asyncio
+
+
+class ConcurrencyLimiterStrategy:
+    def __init__(self, max_concurrent: int):
+        self._max_concurrent = max_concurrent
+        self._active = 0
+        self._lock = asyncio.Lock()
+
+    async def allow(self, *args, **kwargs) -> bool:
+        async with self._lock:
+            if self._active < self._max_concurrent:
+                self._active += 1
+                return True
+            return False
+
+    async def release(self) -> None:
+        async with self._lock:
+            self._active = max(0, self._active - 1)

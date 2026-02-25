@@ -14,5 +14,6 @@ No frameworks. No dependencies. Just coroutines, standard libs, and the irration
 | Module | Description |
 |--------|-------------|
 | `url_shortener/` | Async, minimal, and absolutely unnecessary. |
+| `rate_limiter/` | Pluggable strategies, zero dependencies, maximum regret. |
 
-More designs to come, if I don’t burn out first.
+More designs to come, if I don't burn out first.

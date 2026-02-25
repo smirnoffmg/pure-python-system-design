@@ -56,4 +56,27 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Systems:
-    - URL Shortener: url_shortener/index.md
+    - URL Shortener:
+      - url_shortener/index.md
+      - Configuration: url_shortener/configuration.md
+      - Architecture: url_shortener/architecture.md
+      - API Reference: url_shortener/api-reference.md
+      - Code Examples: url_shortener/code-examples.md
+      - Testing: url_shortener/testing.md
+    - Rate Limiter:
+      - rate_limiter/index.md
+      - Strategies:
+        - Token Bucket: rate_limiter/token-bucket.md
+        - Fixed Window: rate_limiter/fixed-window.md
+        - Leaky Bucket: rate_limiter/leaky-bucket.md
+        - Sliding Window Log: rate_limiter/sliding-window-log.md
+        - Sliding Window Counter: rate_limiter/sliding-window-counter.md
+        - Concurrency Limiter: rate_limiter/concurrency-limiter.md
+      - Framework Examples:
+        - FastAPI: rate_limiter/examples/fastapi.md
+        - Flask: rate_limiter/examples/flask.md
+        - Django: rate_limiter/examples/django.md
+        - aiohttp: rate_limiter/examples/aiohttp.md
+        - Litestar: rate_limiter/examples/litestar.md
+        - Sanic: rate_limiter/examples/sanic.md
+      - Testing: rate_limiter/testing.md
